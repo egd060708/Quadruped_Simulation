@@ -147,7 +147,7 @@ int main(int argc, char **argv)
     rf_hip->setTorque(upper::constrain(rf_leg_obj.targetJoint.Torque(0),43));
     rf_thigh->setTorque(upper::constrain(rf_leg_obj.targetJoint.Torque(1),43));
     rf_calf->setTorque(upper::constrain(rf_leg_obj.targetJoint.Torque(2),43));
-
+    
 
     // Matrix3f testm;
     // testm << 1,2,3,4,5,6,7,8,9;

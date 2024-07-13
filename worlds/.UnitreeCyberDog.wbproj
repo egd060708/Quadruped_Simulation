@@ -5,5 +5,5 @@ sceneTreePerspectives: 000000ff00000001000000030000001c000000c0000000fa010000000
 maximizedDockId: -1
 centralWidgetVisible: 1
 orthographicViewHeight: 1
-textFiles: 1 "../Quadruped-robot-controller-webots-matlab-/controllers/trotingforpaper2/trotingforpaper2.m" "controllers/Unitree_A1_Ctrl/Unitree_A1_Ctrl.cpp"
+textFiles: 1 "../../../Quadruped-robot-controller-webots-matlab-/controllers/trotingforpaper2/trotingforpaper2.m" "../../../Quadruped_Simulation/controllers/Unitree_A1_Ctrl/Unitree_A1_Ctrl.cpp"
 consoles: Console:All:All
