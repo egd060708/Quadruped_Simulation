@@ -12,21 +12,11 @@ namespace Quadruped
         Leg *legObject;
         PIDmethod jPid[3]; // 用于关节位控的控制器
         PIDmethod lPid[3]; // 用于末端力控的控制器
+        Vector3f jPidParams[3];// 关节位控pid参数(一组三个参数分别是kp,kd,o_max)
+        Vector3f lPidParams[3];// 末端力控pid参数(一组三个参数分别是kp,kd,o_max)
+        void loadPidParams(PIDmethod _pidObj[3],Vector3f _pidParam[3]);
     public:
-        LegCtrl(Leg *_l, uint32_t timeStep) : legObject(_l)
-        {
-            for (auto p : jPid)
-            {
-                p.PID_Init(Common, static_cast<double>(0.001 * timeStep));
-            }
-            for (auto p : lPid)
-            {
-                p.PID_Init(Common, static_cast<double>(0.001 * timeStep));
-            }
-            lPid[0].Params_Config(150., 0, -2, 0, 100, -100);
-            lPid[1].Params_Config(250., 0, -5, 0, 100, -100);
-            lPid[2].Params_Config(80., 0, -1, 0, 100, -100);
-        }
+        LegCtrl(Leg *_l, uint32_t timeStep);
         // 更新电机观测值
         void updateMotorAng(Vector3f _a);
         void updateMotorVel(Vector3f _w);
@@ -40,7 +30,37 @@ namespace Quadruped
         // 腿部控制执行
         void legCtrlPosition(); // 直接对腿部电机进行位控
         void legCtrlForce();    // 对腿部末端位置进行力控
+        void legCtrlMix();      //力位混合控制
     };
+
+    LegCtrl::LegCtrl(Leg *_l, uint32_t timeStep) : legObject(_l)
+    {
+        for (auto p : jPid)
+        {
+            p.PID_Init(Common, static_cast<double>(0.001 * timeStep));
+        }
+        for (auto p : lPid)
+        {
+            p.PID_Init(Common, static_cast<double>(0.001 * timeStep));
+        }
+
+        lPidParams[0] << 150,-2.5,100;
+        lPidParams[1] << 250,-5,100;
+        lPidParams[2] << 80,-3,100;
+        loadPidParams(lPid,lPidParams);
+
+        jPidParams[0] << 30,-0.5,30;
+        jPidParams[1] << 50,-1,30;
+        jPidParams[2] << 16,-0.6,30;
+        loadPidParams(jPid,jPidParams);
+
+    }
+
+    void LegCtrl::loadPidParams(PIDmethod _pidObj[3],Vector3f _pidParam[3]){
+        for(int i=0;i<3;i++){
+            _pidObj[i].Params_Config(_pidParam[i](0),0,_pidParam[i](1),0,_pidParam[i](2),-_pidParam[i](2));
+        }
+    }
 
     void LegCtrl::updateMotorAng(Vector3f _a)
     {
@@ -101,5 +121,25 @@ namespace Quadruped
             tmp(i) = lPid[i].out;
         }
         legObject->setTargetLegForce(tmp);
+    }
+
+    void LegCtrl::legCtrlMix()
+    {
+        Vector3f tmp;
+        for (int i = 0; i < 3; i++)
+        {
+            lPid[i].target = legObject->targetLeg.Position(i);
+            lPid[i].current = legObject->currentLeg.Position(i);
+            lPid[i].Adjust(0, legObject->currentLeg.Velocity(i));
+            tmp(i) = lPid[i].out;
+
+            jPid[i].target = legObject->targetJoint.Angle(i);
+            jPid[i].current = legObject->currentJoint.Angle(i);
+            jPid[i].Adjust(0, legObject->currentJoint.Velocity(i));
+        }
+        legObject->setTargetLegForce(tmp);
+        legObject->targetJoint.Torque(0) += jPid[0].out;
+        legObject->targetJoint.Torque(1) += jPid[1].out;
+        legObject->targetJoint.Torque(2) += jPid[2].out;
     }
 }

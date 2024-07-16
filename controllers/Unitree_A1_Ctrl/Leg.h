@@ -93,7 +93,7 @@ namespace Quadruped
         // 雅可比矩阵完成从关节速度到末端速度的映射
         currentLeg.Velocity = jacobi * currentJoint.Velocity;
         // 雅可比矩阵完成从当前关节力矩到当前末端虚拟力的映射
-        // currentLeg.Force = jacobi * currentJoint.Torque;
+        currentLeg.Force = jacobi * currentJoint.Torque;
     }
 
     void Leg::setTargetLegPositon(Vector3f _lPosition)
@@ -119,13 +119,14 @@ namespace Quadruped
         float y = targetLeg.Position(1);
         float z = targetLeg.Position(2);
 
-        float L = sqrtf(x * x + y * y + z * z - L1 * L1);
-        float theta1 = atan2f((L1 * z + L * sqrtf(y * y + z * z - L1 * L1) * y), -L * sqrtf(y * y + z * z - L1 * L1) * z + L1 * y);
+        float L = sqrtf(y * y + z * z - L1 * L1);// 首先是二三级连杆投影到yz平面的映射长度
+        float theta1 = atan2f((L1 * z + L * y), -L * z + L1 * y);
+        L = sqrtf(x * x + y * y + z * z - L1 * L1);// 随后是投影到三维空间的等效长度
         float theta3 = -3.1415926 + acosf((L2 * L2 + L3 * L3 - L * L) / 2 / L2 / L3);
 
         float a1 = y * sinf(theta1) - z * cos(theta1);
-        float m1 = L3 * sinf(theta3);
-        float m2 = L3 * cosf(theta3) + L2;
+        float m1 = -L3 * sinf(theta3);
+        float m2 = -L3 * cosf(theta3) - L2;
         float theta2 = atan2f(a1 * m1 + x * m2, x * m1 - a1 * m2);
 
         targetJoint.Angle(0) = theta1;
