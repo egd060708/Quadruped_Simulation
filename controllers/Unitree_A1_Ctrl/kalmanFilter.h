@@ -13,7 +13,7 @@ using namespace Eigen;
 template <uint8_t xNum, uint8_t uNum, uint8_t yNum>
 class kalmanFilter
 {
-public:
+private:
     MatrixSf(xNum) A = MatrixSf(xNum)::Zero();           // 状态转移矩阵
     Matrixf(xNum, uNum) B = Matrixf(xNum, uNum)::Zero(); // 输入矩阵
     MatrixSf(xNum) Q = MatrixSf(xNum)::Zero();           // 过程噪声协方差矩阵
@@ -58,17 +58,35 @@ public:
         MatrixSf(xNum) P_minus = A * P * A.transpose() + Q;
         // 计算卡尔曼增益
         MatrixSf(yNum) temp = H * P_minus * H.transpose() + R;
-        Matrixf(xNum, yNum) K = P_minus * H.transpose() * temp.inverse();
-        // 更新后验估计
-        x = x_minus + K * (_y - H * x_minus);
-        // 更新后验估计协方差
-        MatrixSf(xNum) E = MatrixSf(xNum)::Identity();
-        P = (E - K * H) * P_minus;
+
+        // // 使用矩阵求逆
+        // Matrixf(xNum, yNum) K = P_minus * H.transpose() * temp.inverse();
+        // // 更新后验估计
+        // x = x_minus + K * (_y - H * x_minus);
+        // // 更新后验估计协方差
+        // MatrixSf(xNum) E = MatrixSf(xNum)::Identity();
+        // P = (E - K * H) * P_minus;
+
+        // 使用lu分解法
+        Eigen::PartialPivLU<Eigen::Matrix<float, 28, 28>> _tempLu = temp.lu();
+        Eigen::Matrix<float, yNum,  1> _tempY = _tempLu.solve(_y-y);
+        Eigen::Matrix<float, yNum, xNum> _tempH = _tempLu.solve(H);
+        Eigen::Matrix<float, yNum, yNum> _tempR = _tempLu.solve(R);
+        Eigen::Matrix<float, yNum, xNum> _tempTH = (temp.transpose()).lu().solve(H);
+        Eigen::Matrix<float, xNum, xNum> _IKH = Eigen::Matrix<float, xNum, xNum>::Identity();
+        _IKH = _IKH - P_minus * H.transpose() * _tempH;
+        x = x_minus + P_minus * H.transpose() * _tempY;
+        P = _IKH * P_minus * _IKH.transpose() + P_minus * H.transpose() * _tempR * _tempTH * P_minus.transpose();
+
         // 计算输出矩阵
         y = H * x;
     }
     Matrixf(yNum, 1) getOut()
     {
         return y;
+    }
+    Matrixf(xNum, 1) getState()
+    {
+        return x;
     }
 };

@@ -17,9 +17,9 @@ namespace Quadruped
     {
         LegS leg_s[4];
         Vector3f dist = Vector3f::Zero();       // 机身在世界坐标系下的位移
-        Vector3f angVel_xyz = Vector3f::Zero(); // 角速度
+        // Vector3f angVel_xyz = Vector3f::Zero(); // 角速度
         Vector3f linVel_xyz = Vector3f::Zero(); // 线速度
-        Vector3f angAcc_xyz = Vector3f::Zero(); // 角加速度
+        // Vector3f angAcc_xyz = Vector3f::Zero(); // 角加速度
         Vector3f linAcc_xyz = Vector3f::Zero(); // 线性加速度
     } worldFrame;
     // 机器人坐标系下的状态，坐标系表示为{b}
@@ -32,11 +32,6 @@ namespace Quadruped
         Vector3f angAcc_xyz = Vector3f::Zero(); // 角加速度
         Vector3f linAcc_xyz = Vector3f::Zero(); // 线性加速度
     } bodyFrame;
-    // 用于平衡控制器的状态
-    typedef struct _balanceState
-    {
-
-    } balanceState;
 
     class Body
     {
@@ -45,8 +40,6 @@ namespace Quadruped
         worldFrame currentWorldState;
         bodyFrame targetBodyState;
         bodyFrame currentBodyState;
-        balanceState targetBalanceState;
-        balanceState currentBalanceState;
 
         Leg *legs[4];
         Vector3f leg2body;                     // 初始值代表左前腿向量
@@ -62,7 +55,7 @@ namespace Quadruped
         float dt;                           // 控制周期
 
         Eigen::Matrix<float, 6, 12> dynamicLeft = Eigen::Matrix<float, 6, 12>::Zero();
-        Eigen::Matrix<float, 6, 1> dynamicRight = Eigen::Matrix<float, 6, 1>::Zero();
+        Eigen::Matrix<float, 6, 6> dynamicRight = Eigen::Matrix<float, 6, 6>::Zero();
 
         Vector3f initRbLegXYPosition; // 指定右后腿初始（平面）位置
 
@@ -241,9 +234,9 @@ namespace Quadruped
             Tsb_c.block<3, 3>(0, 0) = rotation_c;
             Tsb_c.block<3, 1>(0, 3) = currentWorldState.dist - initRbLegXYPosition;
             // 更新其他世界坐标系下的变量
-            currentWorldState.angVel_xyz = rotation_c * currentBodyState.angVel_xyz;
+            // currentWorldState.angVel_xyz = rotation_c * currentBodyState.angVel_xyz;
             currentWorldState.linVel_xyz = rotation_c * currentBodyState.linVel_xyz;
-            currentWorldState.angAcc_xyz = rotation_c * currentBodyState.angAcc_xyz;
+            // currentWorldState.angAcc_xyz = rotation_c * currentBodyState.angAcc_xyz;
             currentWorldState.linAcc_xyz = rotation_c * currentBodyState.linAcc_xyz;
         }
         else if (direction == -1)
@@ -259,9 +252,9 @@ namespace Quadruped
             Tsb_t.block<3, 3>(0, 0) = rotation_t;
             Tsb_t.block<3, 1>(0, 3) = targetWorldState.dist - initRbLegXYPosition;
             // 更新其他世界坐标系下的变量
-            targetBodyState.angVel_xyz = rotation_t.inverse() * targetWorldState.angVel_xyz;
+            // targetBodyState.angVel_xyz = rotation_t.inverse() * targetWorldState.angVel_xyz;
             targetBodyState.linVel_xyz = rotation_t.inverse() * targetWorldState.linVel_xyz;
-            targetBodyState.angAcc_xyz = rotation_t.inverse() * targetWorldState.angAcc_xyz;
+            // targetBodyState.angAcc_xyz = rotation_t.inverse() * targetWorldState.angAcc_xyz;
             targetBodyState.linAcc_xyz = rotation_t.inverse() * targetWorldState.linAcc_xyz;
         }
     }
@@ -333,8 +326,8 @@ namespace Quadruped
             Vector3f Pgi = Rsb_c * currentBodyState.leg_b[i].Position - Rsb_c * Pg;
             dynamicLeft.block<3, 3>(3, i * 3) = v3_to_m3(Pgi);
         }
-        dynamicRight.block<3, 1>(0, 0) = M * (currentWorldState.linAcc_xyz - g);
-        dynamicRight.block<3, 1>(3, 0) = Rsb_c * Ib * Rsb_c.transpose() * currentWorldState.angAcc_xyz;
+        dynamicRight.block<3, 3>(0, 0) = M;
+        dynamicRight.block<3, 3>(3, 3) = Rsb_c * Ib * Rsb_c.transpose();
     }
 
     void Body::updateBodyTargetPos(Vector3f _angle, Vector3f _position)

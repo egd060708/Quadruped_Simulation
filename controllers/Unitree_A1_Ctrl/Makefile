@@ -69,4 +69,12 @@
 null :=
 space := $(null) $(null)
 WEBOTS_HOME_PATH?=$(subst $(space),\ ,$(strip $(subst \,/,$(WEBOTS_HOME))))
+LIBRARIES += -L"/usr/local/include/qpOASES" -lqpOASES
 include $(WEBOTS_HOME_PATH)/resources/Makefile.include
+
+
+
+
+
+
+

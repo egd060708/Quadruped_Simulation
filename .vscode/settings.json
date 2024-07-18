@@ -76,6 +76,13 @@
         "variant": "cpp",
         "__nullptr": "cpp",
         "kroneckerproduct": "cpp",
-        "core": "cpp"
+        "core": "cpp",
+        "*.ipp": "cpp",
+        "*.inc": "cpp",
+        "__config": "cpp",
+        "__hash_table": "cpp",
+        "__locale": "cpp",
+        "ios": "cpp",
+        "locale": "cpp"
     }
 }

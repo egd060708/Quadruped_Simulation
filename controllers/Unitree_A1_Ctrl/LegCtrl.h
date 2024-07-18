@@ -16,7 +16,7 @@ namespace Quadruped
         Vector3f lPidParams[3];// 末端力控pid参数(一组三个参数分别是kp,kd,o_max)
         void loadPidParams(PIDmethod _pidObj[3],Vector3f _pidParam[3]);
     public:
-        LegCtrl(Leg *_l, uint32_t timeStep);
+        LegCtrl(Leg *_l, int timeStep);
         // 更新电机观测值
         void updateMotorAng(Vector3f _a);
         void updateMotorVel(Vector3f _w);
@@ -33,7 +33,7 @@ namespace Quadruped
         void legCtrlMix();      //力位混合控制
     };
 
-    LegCtrl::LegCtrl(Leg *_l, uint32_t timeStep) : legObject(_l)
+    LegCtrl::LegCtrl(Leg *_l, int timeStep) : legObject(_l)
     {
         for (auto p : jPid)
         {

@@ -10,7 +10,7 @@
 #include "RobotParams.h"
 #include "Body.h"
 #include "kalmanFilter.h"
-#include "mpcCal.h"
+#include "BodyCtrl.h"
 
 using namespace webots;
 using namespace Quadruped;
@@ -241,7 +241,7 @@ int main(int argc, char **argv)
     std::cout<<"estimatorOut:"<<std::endl;
     std::cout<<qp_body.estimatorOut.segment(0,3).format(CommaInitFmt)<<std::endl;
     std::cout<<qp_body.currentWorldState.leg_s[0].Position.format(CommaInitFmt)<<std::endl;
-    std::cout<<qp_body.estimator.x.segment(0,3).format(CommaInitFmt)<<std::endl;
+    std::cout<<qp_body.estimator.getState().segment(0,3).format(CommaInitFmt)<<std::endl;
 
     Eigen::Vector3f positionSensor_lf;
     positionSensor_lf(0) = lf_hip_ps->getValue();
